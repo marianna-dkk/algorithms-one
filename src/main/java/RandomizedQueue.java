@@ -76,7 +76,8 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         }
         a[N++] = item;               // add item
         
-        cleanupPoint = N/2;          // reset cleanupPoint after every insert
+        // reset cleanupPoint after every insert
+        cleanupPoint = calcCleanupPoint();          
     }
     
     /**
@@ -99,11 +100,12 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         if (N > 0 && N == a.length / 4) {
             resize(a.length / 2);
         }
-        // move items one step back to eliminate nulls
+        // move items towards the array-top to eliminate nulls
         else if (removals >= cleanupPoint) {
-            cleanUpNulls(pointer);
+            cleanUpNulls(0);
         }
-        cleanupPoint = N/2;          // reset cleanupPoint after every removal
+        // reset cleanupPoint after every removal
+        cleanupPoint = calcCleanupPoint();  
         
         return item;
     }
@@ -121,15 +123,23 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     }
 
     private int randomIndex() {
-        return returnIfNotNull(StdRandom.uniform(N));
+        return returnIfNotNull(StdRandom.uniform(a.length));
     }
     
     private int returnIfNotNull(int i) {
         if (a[i] == null) {
-            return returnIfNotNull(StdRandom.uniform(N));
+            return returnIfNotNull(StdRandom.uniform(a.length));
         } else {
             return i;
         }
+    }
+    
+    private int calcCleanupPoint() {
+        int result = N/2;
+        if (result < 1) {
+            return 1;
+        }
+        return result;
     }
     
     // resize the underlying array holding the elements
@@ -138,32 +148,42 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         Item[] temp = (Item[]) new Object[capacity];
         for (int i = 0; i < N; i++) {
             // copy over to new array only if item != null
-            copyIfNotNull(a, temp, i, i);
+            copyIfNotNull(a, temp, i, i, 0);
         }
         a = temp;
     }
     
-    private void copyIfNotNull(Item[] src, Item[] tg, int srcIx,  int tgIx) {
-        StdOut.println("copy: src=" + Arrays.toString(src) + "\n   target=" 
-                + Arrays.toString(tg) + "\n srcIx=" + srcIx + " targetIx="
-                + tgIx);
-        if (srcIx == src.length) return;
+    private boolean copyIfNotNull(Item[] src, Item[] tg, int srcIx,  int tgIx, int depth) {
+        StdOut.println("copyIfNotNull: src=" + Arrays.toString(src) + "\n target=" + Arrays.toString(tg) +
+                "\nsrcIx=" + srcIx + ", tgIx=" + tgIx + ", depth=" + depth);
+        if (srcIx == src.length) return true;
         if (src[srcIx] == null) {
-            copyIfNotNull(src, tg, srcIx+1, tgIx);
+            return copyIfNotNull(src, tg, srcIx+1, tgIx, ++depth);
         } else {
-            StdOut.println("will copy srcIx [" + srcIx + "] = " + src[srcIx] + 
-                    " to targetIx [" + tgIx + "] = " + tg[tgIx]);
             Item tmp = src[srcIx];
             src[srcIx] = null;
             tg[tgIx] = tmp;
+            return (depth != 0);
         }
     }
     
     private void cleanUpNulls(int pointer) {
-        for (int i = pointer; i < N; i++) {
-            copyIfNotNull(a, a, i, i);
+        StdOut.println("cleanUpNulls: removals=" + removals);
+        StdOut.println("cleanup START: " + Arrays.toString(a));
+        boolean nullFound = false;
+        for (int i = pointer; i < a.length; i++) {
+            nullFound = copyIfNotNull(a, a, i, i, 0);
+            /*if (nullFound) {
+                removals--;
+                StdOut.println("cleanUpNulls: nullFound, removals=" + removals);
+            }
+            if (removals == 0) {
+                break;
+            }*/
         }
         removals = 0;
+        StdOut.println("cleanUpNulls: removals=" + removals);
+        StdOut.println("cleanup END  : " + Arrays.toString(a));
     }
     
     @Override
@@ -177,14 +197,12 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         private int[] randIx;
 
         public RandomArrayIterator() {
-            StdOut.println("BEFORE clean up:" + Arrays.toString(a));
             i = 0;
             
             // if needed, perform cleanup of nulls
             if (removals > 0) {
                 cleanUpNulls(i);
             }
-            StdOut.println("AFTER  clean up:" + Arrays.toString(a));
             
             randIx = new int[N];
             for (int j = 0; j < N; j++) {
