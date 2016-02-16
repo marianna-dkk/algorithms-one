@@ -15,17 +15,17 @@ public class Deque<Item> implements Iterable<Item> {
     /**
      * Pointer to the first element of the queue.
      */
-    private volatile Node first = null;
+    private Node first = null;
 
     /**
      * Pointer to the last node of the queue.
      */
-    private volatile Node last  = null;
+    private Node last  = null;
 
     /**
      * Number of items in the Dequeue.
      */
-    private volatile int  size  = 0;
+    private int  size  = 0;
 
     /**
      * Private class specifying the object handled by the Dequeue.
@@ -33,9 +33,9 @@ public class Deque<Item> implements Iterable<Item> {
      * @author Marianna Dikaiakou
      */
     private class Node {
-        Item item;
-        Node next     = null;
-        Node previous = null;
+        private Item item;
+        private Node next     = null;
+        private Node previous = null;
     }
 
     private class DequeueIterator implements Iterator<Item> {
@@ -104,9 +104,7 @@ public class Deque<Item> implements Iterable<Item> {
         newfirst.next = oldfirst;
         
         if (oldfirst != null) {
-            synchronized (oldfirst) {
-                oldfirst.previous = newfirst;
-            }
+            oldfirst.previous = newfirst;
         }
         
         first = newfirst;
@@ -130,9 +128,7 @@ public class Deque<Item> implements Iterable<Item> {
         newlast.item = item;
         newlast.previous = oldlast;
         if (oldlast != null) {
-            synchronized(oldlast) {
-                oldlast.next = newlast;
-            }
+            oldlast.next = newlast;
         }
         
         last = newlast;
@@ -154,10 +150,11 @@ public class Deque<Item> implements Iterable<Item> {
         }
         
         Item item = first.item;
-        synchronized (first) {
-            first = first.next;
-            size--;
+        first = first.next;
+        if (first != null) {
+            first.previous = null;
         }
+        size--;
             
         return item;
     }
@@ -174,10 +171,11 @@ public class Deque<Item> implements Iterable<Item> {
         }
 
         Item item = last.item;
-        synchronized(last) {
-            last = last.previous;
-            size--;
+        last = last.previous;
+        if (last != null) {
+            last.next = null;
         }
+        size--;
         
         return item;
     }
@@ -202,27 +200,38 @@ public class Deque<Item> implements Iterable<Item> {
         intDeque.addFirst(1000);
         intDeque.addFirst(10000);
         intDeque.addFirst(100);
-        System.out.println("SIZE 1: " + intDeque.size());
-        intDeque.removeLast();
+        System.out.println("SIZE 2: " + intDeque.size());
         
+        intDeque.removeLast();
         intDeque.addLast(9);
         intDeque.addLast(90);
+        System.out.println("SIZE 3: " + intDeque.size());
         intDeque.addLast(900);
         intDeque.addLast(90);
         intDeque.addLast(9);
         intDeque.addLast(9000);
-        intDeque.addLast(90000);
+        intDeque.addFirst(90000);
         intDeque.addLast(900000);
-        intDeque.addLast(900);
+        intDeque.addFirst(900);
         intDeque.addLast(90);
-        intDeque.addLast(900);
+        intDeque.addFirst(900);
         intDeque.addLast(91);
         intDeque.addLast(92);
-        System.out.println("SIZE 2: " + intDeque.size());
+        System.out.println("SIZE 4: " + intDeque.size());
+        intDeque.removeLast();
+        intDeque.addFirst(9);
+        intDeque.removeLast();
+        intDeque.addFirst(90);
+        intDeque.removeFirst();
+        intDeque.addFirst(900);
+        intDeque.removeFirst();
+        intDeque.addFirst(9000);
+        intDeque.removeLast();
+        System.out.println("SIZE 5: " + intDeque.size());
         
         Iterator<Integer> ii = intDeque.iterator();
-        while(ii.hasNext()) {
-            System.out.println("item is: " + ii.next());
+        while (ii.hasNext()) {
+            System.out.print("[" + ii.next() + "] ");
         }
     }
 }

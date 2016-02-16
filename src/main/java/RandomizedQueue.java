@@ -27,11 +27,21 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     private int N;
     
     /**
+     * When number of random removals reaches this point, 
+     * copy array contents, to get rid of nulls.
+     */
+    private int cleanupPoint;
+    
+    private int removals;
+    
+    /**
      * Construct an empty randomized queue.
      */
     public RandomizedQueue() {
         a = (Item[]) new Object[2];
         N = 0;
+        cleanupPoint = 1;
+        removals = 0;
     }
     
     /**
@@ -57,7 +67,6 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
      * @param item
      */
     public void enqueue(Item item) {
-        StdOut.println("enqueue: " + item);
         if (item == null) {
             throw new NullPointerException("Attempt to enqueue null item");
         }
@@ -66,6 +75,8 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
             resize(2 * a.length);    // double size of array if necessary
         }
         a[N++] = item;               // add item
+        
+        cleanupPoint = N/2;          // reset cleanupPoint after every insert
     }
     
     /**
@@ -74,7 +85,6 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
      * @return
      */
     public Item dequeue() {
-        StdOut.println("dequeue");
         if (isEmpty()) {
             throw new NoSuchElementException("Stack underflow");
         }
@@ -83,20 +93,17 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         Item item = a[pointer];
         a[pointer] = null;
         N--;
+        removals++;
         
         // check if resizing is needed
         if (N > 0 && N == a.length / 4) {
             resize(a.length / 2);
         }
         // move items one step back to eliminate nulls
-        else {
-//            resize(a.length);
-            synchronized (a) {
-                for (int i = pointer; i < N; i++) {
-                    copyIfNotNull(a, a, i, i);
-                }
-            }
+        else if (removals >= cleanupPoint) {
+            cleanUpNulls(pointer);
         }
+        cleanupPoint = N/2;          // reset cleanupPoint after every removal
         
         return item;
     }
@@ -118,7 +125,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     }
     
     private int returnIfNotNull(int i) {
-        if(a[i] == null) {
+        if (a[i] == null) {
             return returnIfNotNull(StdRandom.uniform(N));
         } else {
             return i;
@@ -129,11 +136,9 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     private void resize(int capacity) {
         assert capacity >= N;
         Item[] temp = (Item[]) new Object[capacity];
-        synchronized (a) {
-            for (int i = 0; i < N; i++) {
-                // copy over to new array only if item != null
-                copyIfNotNull(a, temp, i, i);
-            }
+        for (int i = 0; i < N; i++) {
+            // copy over to new array only if item != null
+            copyIfNotNull(a, temp, i, i);
         }
         a = temp;
     }
@@ -148,9 +153,17 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         } else {
             StdOut.println("will copy srcIx [" + srcIx + "] = " + src[srcIx] + 
                     " to targetIx [" + tgIx + "] = " + tg[tgIx]);
-            tg[tgIx] = src[srcIx];
+            Item tmp = src[srcIx];
             src[srcIx] = null;
+            tg[tgIx] = tmp;
         }
+    }
+    
+    private void cleanUpNulls(int pointer) {
+        for (int i = pointer; i < N; i++) {
+            copyIfNotNull(a, a, i, i);
+        }
+        removals = 0;
     }
     
     @Override
@@ -164,7 +177,15 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         private int[] randIx;
 
         public RandomArrayIterator() {
+            StdOut.println("BEFORE clean up:" + Arrays.toString(a));
             i = 0;
+            
+            // if needed, perform cleanup of nulls
+            if (removals > 0) {
+                cleanUpNulls(i);
+            }
+            StdOut.println("AFTER  clean up:" + Arrays.toString(a));
+            
             randIx = new int[N];
             for (int j = 0; j < N; j++) {
                 randIx[j] = j;
@@ -184,13 +205,11 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            synchronized (a) {
-                if (a[randIx[i]] == null) {
-                    throw new ConcurrentModificationException("Underlying "
-                            + "implementation has been modified");
-                }
-                return a[randIx[i++]];
+            if (a[randIx[i]] == null) {
+                throw new ConcurrentModificationException("Underlying "
+                        + "implementation has been modified");
             }
+            return a[randIx[i++]];
         }
     }
 
