@@ -99,7 +99,6 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         removals++;
         
         // check if resizing is needed
-        StdOut.println("dequeue: N=" + N + ", a.length/4=" + (a.length / 4));
         if (N > 0 && N == a.length / 4) {
             resize(a.length / 2);
         }
@@ -126,18 +125,14 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     }
 
     private int randomIndex() {
-        StdOut.println("randomIndex: N=" + N + ", a=" + Arrays.toString(a));
         return returnIfNotNull(StdRandom.uniform(N));
     }
     
     private int returnIfNull(int start) {
-        StdOut.println("returnIfNull: start=" + start);
         boolean incr = true;
         int i = start;
-//        if (i <= a.length/2) incr = true;
         
         while (a[i] != null) {
-            StdOut.println("returnIfNull: i=" + i + " a[i]=" + a[i]);
             if (incr) {
                 i++;
             } else {
@@ -148,22 +143,16 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
                 i = start - 1;
                 incr = false;
             }
-            /*if (i < 0) {
-                i = start + 1;
-                incr = true;
-            }*/
         }
         return i;
     }
     
     private int returnIfNotNull(int start) {
-        StdOut.println("returnIfNotNull: start=" + start);
         boolean incr = false;
         int i = start;
         if (i <= a.length/2) incr = true;
         
         while (a[i] == null) {
-            StdOut.println("returnIfNotNull: i=" + i + " a[i]=" + a[i]);
             if (incr) {
                 i++;
             } else {
@@ -183,7 +172,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     }
     
     private int calcCleanupPoint() {
-        int result = N/2;
+        int result = N/3;
         if (result < 1) {
             return 1;
         }
@@ -192,7 +181,6 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     
     // resize the underlying array holding the elements
     private void resize(int capacity) {
-        StdOut.println("resize: capacity=" + capacity + ", N=" + N + " a=" + Arrays.toString(a));
         assert capacity >= N;
         Item[] temp = (Item[]) new Object[capacity];
         for (int i = 0; i < N; i++) {
@@ -200,7 +188,6 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
             copyIfNotNull(a, temp, i, i, 0);
         }
         a = temp;
-        StdOut.println("resize: END a=" + Arrays.toString(a));
     }
     
     private boolean copyIfNotNull(Item[] src, Item[] tg, int srcIx,  int tgIx,
