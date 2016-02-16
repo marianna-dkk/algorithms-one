@@ -8,7 +8,8 @@ public class Subset {
         RandomizedQueue<String> rq = new RandomizedQueue<>();
         
         if (args.length != 1) {
-            throw new IllegalArgumentException("Input number k should be provided");
+            throw new IllegalArgumentException("Input number k should be"
+                    + " provided");
         }
         int k = Integer.parseInt(args[0]);
         

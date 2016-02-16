@@ -73,8 +73,10 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         
         if (N == a.length) {
             resize(2 * a.length);    // double size of array if necessary
+            a[N++] = item;           // add item
+        } else {
+            a[returnIfNull(N++)] = item;
         }
-        a[N++] = item;               // add item
         
         // reset cleanupPoint after every insert
         cleanupPoint = calcCleanupPoint();          
@@ -97,6 +99,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         removals++;
         
         // check if resizing is needed
+        StdOut.println("dequeue: N=" + N + ", a.length/4=" + (a.length / 4));
         if (N > 0 && N == a.length / 4) {
             resize(a.length / 2);
         }
@@ -123,15 +126,60 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     }
 
     private int randomIndex() {
-        return returnIfNotNull(StdRandom.uniform(a.length));
+        StdOut.println("randomIndex: N=" + N + ", a=" + Arrays.toString(a));
+        return returnIfNotNull(StdRandom.uniform(N));
     }
     
-    private int returnIfNotNull(int i) {
-        if (a[i] == null) {
-            return returnIfNotNull(StdRandom.uniform(a.length));
-        } else {
-            return i;
+    private int returnIfNull(int start) {
+        StdOut.println("returnIfNull: start=" + start);
+        boolean incr = true;
+        int i = start;
+//        if (i <= a.length/2) incr = true;
+        
+        while (a[i] != null) {
+            StdOut.println("returnIfNull: i=" + i + " a[i]=" + a[i]);
+            if (incr) {
+                i++;
+            } else {
+                i--;
+            }
+            
+            if (i == a.length) {
+                i = start - 1;
+                incr = false;
+            }
+            /*if (i < 0) {
+                i = start + 1;
+                incr = true;
+            }*/
         }
+        return i;
+    }
+    
+    private int returnIfNotNull(int start) {
+        StdOut.println("returnIfNotNull: start=" + start);
+        boolean incr = false;
+        int i = start;
+        if (i <= a.length/2) incr = true;
+        
+        while (a[i] == null) {
+            StdOut.println("returnIfNotNull: i=" + i + " a[i]=" + a[i]);
+            if (incr) {
+                i++;
+            } else {
+                i--;
+            }
+            
+            if (i == a.length) {
+                i = start - 1;
+                incr = false;
+            }
+            if (i < 0) {
+                i = start + 1;
+                incr = true;
+            }
+        }
+        return i;
     }
     
     private int calcCleanupPoint() {
@@ -144,6 +192,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     
     // resize the underlying array holding the elements
     private void resize(int capacity) {
+        StdOut.println("resize: capacity=" + capacity + ", N=" + N + " a=" + Arrays.toString(a));
         assert capacity >= N;
         Item[] temp = (Item[]) new Object[capacity];
         for (int i = 0; i < N; i++) {
@@ -151,11 +200,11 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
             copyIfNotNull(a, temp, i, i, 0);
         }
         a = temp;
+        StdOut.println("resize: END a=" + Arrays.toString(a));
     }
     
-    private boolean copyIfNotNull(Item[] src, Item[] tg, int srcIx,  int tgIx, int depth) {
-        StdOut.println("copyIfNotNull: src=" + Arrays.toString(src) + "\n target=" + Arrays.toString(tg) +
-                "\nsrcIx=" + srcIx + ", tgIx=" + tgIx + ", depth=" + depth);
+    private boolean copyIfNotNull(Item[] src, Item[] tg, int srcIx,  int tgIx,
+            int depth) {
         if (srcIx == src.length) return true;
         if (src[srcIx] == null) {
             return copyIfNotNull(src, tg, srcIx+1, tgIx, ++depth);
@@ -168,22 +217,10 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     }
     
     private void cleanUpNulls(int pointer) {
-        StdOut.println("cleanUpNulls: removals=" + removals);
-        StdOut.println("cleanup START: " + Arrays.toString(a));
-        boolean nullFound = false;
         for (int i = pointer; i < a.length; i++) {
-            nullFound = copyIfNotNull(a, a, i, i, 0);
-            /*if (nullFound) {
-                removals--;
-                StdOut.println("cleanUpNulls: nullFound, removals=" + removals);
-            }
-            if (removals == 0) {
-                break;
-            }*/
+            copyIfNotNull(a, a, i, i, 0);
         }
         removals = 0;
-        StdOut.println("cleanUpNulls: removals=" + removals);
-        StdOut.println("cleanup END  : " + Arrays.toString(a));
     }
     
     @Override
@@ -249,7 +286,72 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         rq.enqueue(205);
         rq.enqueue(206);
         rq.enqueue(207);
+        rq.enqueue(199);
+        rq.enqueue(200);
+        rq.enqueue(201);
+        rq.dequeue();
+        rq.dequeue();
+        rq.enqueue(202);
+        rq.dequeue();
+        rq.dequeue();
+        rq.enqueue(203);
+        rq.enqueue(204);
+        rq.enqueue(205);
         StdOut.println("arr: " + Arrays.toString(rq.a));
+        
+        rq.enqueue(199);
+        rq.enqueue(200);
+        rq.enqueue(201);
+        rq.dequeue();
+        rq.dequeue();
+        rq.enqueue(202);
+        rq.dequeue();
+        rq.dequeue();
+        rq.enqueue(203);
+        rq.enqueue(204);
+        rq.enqueue(205);
+        rq.dequeue();
+        rq.dequeue();
+        rq.enqueue(206);
+        rq.dequeue();
+        rq.dequeue();
+        rq.dequeue();
+        rq.enqueue(207);
+        rq.enqueue(199);
+        rq.enqueue(200);
+        rq.enqueue(201);
+        rq.dequeue();
+        rq.dequeue();
+        rq.dequeue();
+        rq.enqueue(202);
+        rq.enqueue(203);
+        rq.dequeue();
+        rq.enqueue(204);
+        rq.dequeue();
+        rq.enqueue(205);
+        rq.dequeue();
+        rq.enqueue(206);
+        rq.dequeue();
+        rq.enqueue(207);
+        rq.dequeue();
+        rq.enqueue(199);
+        rq.dequeue();
+        rq.enqueue(200);
+        rq.dequeue();
+        rq.enqueue(201);
+        rq.dequeue();
+        rq.enqueue(202);
+        rq.dequeue();
+        rq.enqueue(203);
+        rq.dequeue();
+        rq.enqueue(204);
+        rq.dequeue();
+        rq.enqueue(205);
+        rq.dequeue();
+        rq.enqueue(206);
+        rq.dequeue();
+        rq.enqueue(207);
+        rq.dequeue();
         
         StdOut.println("remove: " + rq.dequeue());
         StdOut.println("arr: " + Arrays.toString(rq.a));
